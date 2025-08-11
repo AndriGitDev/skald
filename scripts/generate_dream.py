@@ -18,15 +18,17 @@ IMAGE_DIR = 'generated_images'
 SUBJECTS = [
     "a geothermal lagoon under a sky of stars", "a library carved from glacial ice",
     "a Viking longship sailing the aurora borealis", "a lighthouse at the edge of the world",
-    "a rune-carved stone humming with power", "the heart of a sleeping volcano"
+    "a rune-carved stone humming with power", "the heart of a sleeping volcano",
+    "a forgotten fishing village", "a path of glowing moss in a lava field"
 ]
 CONCEPTS = [
     "a forgotten saga", "the memory of the first winter", "the silence between worlds",
-    "the solitude of the midnight sun", "an echo from a dying star"
+    "the solitude of the midnight sun", "an echo from a dying star",
+    "the weight of an ancient promise", "the birth of a new god"
 ]
 STYLES = [
     "as a lost myth", "whispered by the arctic wind", "etched in volcanic rock",
-    "as a prophecy", "as a sailor's final log entry"
+    "as a prophecy", "as a sailor's final log entry", "as a lullaby for a giant"
 ]
 
 def generate_creative_prompt():
@@ -39,18 +41,17 @@ def generate_creative_prompt():
 def generate_poem_and_image_prompt(initial_prompt):
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-1.5-flash')
-    
-    # Generate Poem and explicitly cast to string
-    poem_response = model.generate_content(f"You are the Skald... Write a short poem based on this idea: '{initial_prompt}'.")
-    poem = str(getattr(poem_response, 'text', ''))
+    poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
+    poem = str(getattr(model.generate_content(poem_prompt), 'text', ''))
     print(f"--- Generated Poem ---\n{poem.strip()}\n----------------------")
-
-    # Generate Image Prompt and explicitly cast to string
-    image_prompt_template = f"Read this poem and transform it into a rich, detailed prompt for an AI image generator...\n\nPOEM:\n\"\"\"\n{poem}\n\"\"\"\n\nDETAILED PROMPT:"
-    image_prompt_response = model.generate_content(image_prompt_template)
-    image_prompt = str(getattr(image_prompt_response, 'text', ''))
-    print(f"--- Generated Image Prompt ---\n{image_prompt.strip()}\n----------------------------")
     
+    image_prompt_template = (
+        "Read this poem and transform it into a rich, detailed, and descriptive prompt for an AI image generator. "
+        "Describe the scene, mood, colors, and composition. Add style cues like 'epic fantasy art, cinematic lighting, highly detailed, photorealistic'.\n\n"
+        f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nDETAILED PROMPT:"
+    )
+    image_prompt = str(getattr(model.generate_content(image_prompt_template), 'text', ''))
+    print(f"--- Generated Image Prompt ---\n{image_prompt.strip()}\n----------------------------")
     return poem, image_prompt
 
 # --- Image Generation (Stability AI) ---
@@ -59,43 +60,36 @@ def generate_image(prompt):
     answers = stability_api.generate(prompt=[generation.Prompt(text=prompt)], height=1088, width=1920, steps=30, cfg_scale=7.0, samples=1)
     for resp in answers:
         for artifact in resp.artifacts:
+            # This is the important change. We now treat a filter event as a critical error.
             if artifact.finish_reason == generation.FILTER:
-                raise Warning("Image generation failed due to safety filter.")
+                raise Exception("Image generation failed due to Stability AI's safety filter. The prompt was likely flagged as unsafe.")
             if artifact.type == generation.ARTIFACT_IMAGE:
                 print("Image generated successfully from Stability AI.")
                 return BytesIO(artifact.binary)
+    # If the loop finishes without returning an image, return None.
     return None
 
 # --- File Operations ---
 def save_image_and_update_json(poem, image_bytes, initial_prompt):
-    try:
-        timestamp_str = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
-        image_filename = f"{timestamp_str}.png"
-        image_path = os.path.join(IMAGE_DIR, image_filename)
-        os.makedirs(IMAGE_DIR, exist_ok=True)
-        
-        with open(image_path, "wb") as f:
-            f.write(image_bytes.read())
-        print(f"Image saved to: {image_path}")
-
-        with open(JSON_FILE, 'r+') as f:
-            data = json.load(f)
-            new_dream_entry = {
-                "timestamp": str(datetime.utcnow().isoformat() + "Z"),
-                "prompt": str(initial_prompt),
-                "poem": str(poem).strip(),
-                "image_url": str(image_path)
-            }
-            data['dreams'].append(new_dream_entry)
-            f.seek(0)
-            json.dump(data, f, indent=4)
-            f.truncate()
-    except TypeError as e:
-        print(f"A TypeError occurred during file operations, likely with json.dump: {e}", file=sys.stderr)
-        raise
-    except Exception as e:
-        print(f"An unexpected error occurred during file operations: {e}", file=sys.stderr)
-        raise
+    timestamp_str = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
+    image_filename = f"{timestamp_str}.png"
+    image_path = os.path.join(IMAGE_DIR, image_filename)
+    os.makedirs(IMAGE_DIR, exist_ok=True)
+    with open(image_path, "wb") as f:
+        f.write(image_bytes.read())
+    print(f"Image saved to: {image_path}")
+    with open(JSON_FILE, 'r+') as f:
+        data = json.load(f)
+        new_dream_entry = {
+            "timestamp": str(datetime.utcnow().isoformat() + "Z"),
+            "prompt": str(initial_prompt),
+            "poem": str(poem).strip(),
+            "image_url": str(image_path)
+        }
+        data['dreams'].append(new_dream_entry)
+        f.seek(0)
+        json.dump(data, f, indent=4)
+        f.truncate()
 
 # --- Main Execution ---
 def main():
@@ -117,9 +111,14 @@ def main():
     if image_bytes:
         save_image_and_update_json(poem, image_bytes, initial_prompt)
         print("A new dream has been recorded. The Skald sleeps again.")
+    else:
+        # This makes the "silent failure" visible in the logs.
+        print("No image was returned from the generation service. No new dream will be recorded.")
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
         print(f"An error occurred in the main process: {e}", file=sys.stderr)
+        # We explicitly exit with a non-zero status code to make the workflow step fail.
+        sys.exit(1)
