@@ -56,3 +56,24 @@ body {
 .github-link:hover {
     opacity: 1;
 }
+/* --- Logo Styling --- */
+.logo-link {
+    position: absolute;
+    top: 20px;
+    left: 25px;
+    z-index: 10; /* Ensures it's on top of other content */
+    width: 50px; /* Adjust size as needed */
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.logo-link:hover {
+    opacity: 1;
+}
+
+.logo-link img {
+    width: 100%;
+    height: auto;
+    /* Optional: adds a subtle glow to match a dark theme */
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+}
