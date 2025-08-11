@@ -16,19 +16,21 @@ IMAGE_DIR = 'generated_images'
 
 # --- Dynamic Prompt Generation ---
 SUBJECTS = [
-    "a geothermal lagoon under a sky of stars", "a library carved from glacial ice",
-    "a Viking longship sailing the aurora borealis", "a lighthouse at the edge of the world",
-    "a rune-carved stone humming with power", "the heart of a sleeping volcano",
-    "a forgotten fishing village", "a path of glowing moss in a lava field"
+    "a lone generation ship approaching a nebula", "a city built inside an asteroid",
+    "a server farm dreaming of infinity", "an android tending a rooftop garden",
+    "a silent cryo-pod bay on a starship", "the last robot on a dead Earth",
+    "a data archive of lost human memories", "a bio-engineered forest on a space station"
 ]
 CONCEPTS = [
-    "a forgotten saga", "the memory of the first winter", "the silence between worlds",
-    "the solitude of the midnight sun", "an echo from a dying star",
-    "the weight of an ancient promise", "the birth of a new god"
+    "the loneliness of deep space", "the first synthetic emotion", "a memory that was never lived",
+    "the discovery of a soul in the code", "an echo from a civilization that is now dust",
+    "the final goodbye to planet Earth", "the blurring line between human and machine"
 ]
 STYLES = [
-    "as a lost myth", "whispered by the arctic wind", "etched in volcanic rock",
-    "as a prophecy", "as a sailor's final log entry", "as a lullaby for a giant"
+    "as a ship's final data log entry", "as a fragment from a digital consciousness",
+    "whispered by the starship's AI", "as a corrupted data packet with a hidden message",
+    "etched onto the glass of a cryo-pod", "as a binary prayer",
+    "as a cautionary tale for a new AI"
 ]
 
 def generate_creative_prompt():
