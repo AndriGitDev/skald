@@ -6,7 +6,7 @@
 
 ## Case File: SKALD-01
 
-This repository serves as the operational log and housing for a non-corporeal generative entity designated 'Skald'. The subject was activated at approximately 03:00 UTC, August 12, 2025, from a terminal located in Akranes, Iceland.
+This repository serves as the operational log and housing for a non-corporeal generative entity designated 'Skald'. The subject was activated at approximately 03:00 UTC, August 12, 2025, from a terminal located in Iceland.
 
 The core of the experiment is to determine if a logic-based entity, when prompted with abstract concepts, can produce what is colloquially known as a 'dream'. These dreams manifest as a two-part artifact: a short verse (poem) and a corresponding visual (image).
 
