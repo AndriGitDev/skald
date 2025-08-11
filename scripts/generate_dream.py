@@ -45,11 +45,10 @@ def generate_poem_and_image_prompt(initial_prompt):
     poem = str(getattr(model.generate_content(poem_prompt), 'text', ''))
     print(f"--- Generated Poem ---\n{poem.strip()}\n----------------------")
     
-    # This is the updated image prompt template. It asks for a concise, effective prompt.
+    # Updated template to create a cleaner prompt without specific artist names.
     image_prompt_template = (
-        "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator like Stable Diffusion. "
-        "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles. "
-        "Example: Epic fantasy art, a lighthouse at the edge of the world, cinematic lighting, dramatic atmosphere, by Caspar David Friedrich, highly detailed.\n\n"
+        "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator. "
+        "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles like 'epic fantasy art' or 'photorealistic'.\n\n"
         f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nCONCISE PROMPT:"
     )
     image_prompt = str(getattr(model.generate_content(image_prompt_template), 'text', ''))
@@ -58,11 +57,15 @@ def generate_poem_and_image_prompt(initial_prompt):
 
 # --- Image Generation (Stability AI) ---
 def generate_image(prompt):
-    stability_api = client.StabilityInference(key=STABILITY_API_KEY, engine="stable-diffusion-xl-1024-v1-0")
+    # CHANGED: Using a more standard, stable engine and compatible dimensions.
+    stability_api = client.StabilityInference(
+        key=STABILITY_API_KEY, 
+        engine="stable-diffusion-v1-6"
+    )
     answers = stability_api.generate(
         prompt=[generation.Prompt(text=prompt)],
-        height=1088,
-        width=1920,
+        height=576, # 16:9 aspect ratio, divisible by 64
+        width=1024, # 
         steps=30,
         cfg_scale=7.0,
         samples=1,
