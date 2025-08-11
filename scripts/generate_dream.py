@@ -14,88 +14,73 @@ STABILITY_API_KEY = os.getenv("STABILITY_API_KEY")
 JSON_FILE = 'dreams.json'
 IMAGE_DIR = 'generated_images'
 
-# --- Dynamic Prompt Generation ---
-SUBJECTS = [
-    "a geothermal lagoon under a sky of stars", "a library carved from glacial ice",
-    "a Viking longship sailing the aurora borealis", "a lighthouse at the edge of the world",
-    "a rune-carved stone humming with power", "the heart of a sleeping volcano",
-    "a forgotten fishing village", "a path of glowing moss in a lava field"
-]
-CONCEPTS = [
-    "a forgotten saga", "the memory of the first winter", "the silence between worlds",
-    "the solitude of the midnight sun", "an echo from a dying star",
-    "the weight of an ancient promise", "the birth of a new god"
-]
-STYLES = [
-    "as a lost myth", "whispered by the arctic wind", "etched in volcanic rock",
-    "as a prophecy", "as a sailor's final log entry", "as a lullaby for a giant"
-]
-
 def generate_creative_prompt():
-    subject = random.choice(SUBJECTS)
-    concept = random.choice(CONCEPTS)
-    style = random.choice(STYLES)
-    return f"{subject}, about {concept}, {style}"
+    print("DEBUG: Generating creative prompt...")
+    # Simplified for stability
+    prompt = "a Viking longship sailing the aurora borealis, about a forgotten saga, as a prophecy"
+    print("DEBUG: Creative prompt generated.")
+    return prompt
 
-# --- AI Interaction (Gemini) ---
 def generate_poem_and_image_prompt(initial_prompt):
+    print("DEBUG: Configuring Gemini API...")
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-1.5-flash')
-    poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
-    poem = str(getattr(model.generate_content(poem_prompt), 'text', ''))
-    print(f"--- Generated Poem ---\n{poem.strip()}\n----------------------")
+    print("DEBUG: Gemini configured. Generating poem...")
     
-    image_prompt_template = (
-        "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator. "
-        "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles like 'epic fantasy art' or 'photorealistic'.\n\n"
-        f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nCONCISE PROMPT:"
-    )
-    image_prompt = str(getattr(model.generate_content(image_prompt_template), 'text', ''))
-    print(f"--- Generated Image Prompt ---\n{image_prompt.strip()}\n----------------------------")
+    poem_response = model.generate_content(f"Write a short, evocative poem based on this idea: '{initial_prompt}'.")
+    poem = str(getattr(poem_response, 'text', ''))
+    print("DEBUG: Poem generation complete.")
+
+    image_prompt_template = "Create a concise, powerful prompt for an AI image generator based on this poem... Example: Epic fantasy art, etc."
+    image_prompt_response = model.generate_content(image_prompt_template)
+    image_prompt = str(getattr(image_prompt_response, 'text', ''))
+    print("DEBUG: Image prompt generation complete.")
+    
     return poem, image_prompt
 
-# --- Image Generation (Stability AI via REST API) ---
 def generate_image(prompt):
+    print("DEBUG: Preparing to call Stability AI REST API...")
     engine_id = "stable-diffusion-v1-6"
     api_host = "https://api.stability.ai"
-    
-    response = requests.post(
-        f"{api_host}/v1/generation/{engine_id}/text-to-image",
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Authorization": f"Bearer {STABILITY_API_KEY}"
-        },
-        json={
-            "text_prompts": [{"text": prompt}],
-            "cfg_scale": 7,
-            "height": 576,
-            "width": 1024,
-            "samples": 1,
-            "steps": 30,
-        },
-    )
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer {STABILITY_API_KEY}"
+    }
+    payload = {
+        "text_prompts": [{"text": prompt}],
+        "cfg_scale": 7, "height": 576, "width": 1024,
+        "samples": 1, "steps": 30,
+    }
+    print("DEBUG: Calling Stability AI API endpoint...")
+    response = requests.post(f"{api_host}/v1/generation/{engine_id}/text-to-image", headers=headers, json=payload)
+    print(f"DEBUG: Stability AI response status code: {response.status_code}")
 
     if response.status_code != 200:
         raise Exception(f"Non-200 response from Stability API: {response.text}")
 
     data = response.json()
+    print("DEBUG: JSON response from Stability AI parsed.")
+
     for image in data.get("artifacts", []):
         image_bytes = base64.b64decode(image["base64"])
-        print("Image generated successfully via REST API.")
+        print("DEBUG: Image decoded from base64.")
         return BytesIO(image_bytes)
-        
+    
     return None
 
-# --- File Operations ---
 def save_image_and_update_json(poem, image_bytes, initial_prompt):
+    print("DEBUG: Starting file-saving process...")
     timestamp_str = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
     image_filename = f"{timestamp_str}.png"
     image_path = os.path.join(IMAGE_DIR, image_filename)
     os.makedirs(IMAGE_DIR, exist_ok=True)
+    
+    print(f"DEBUG: Saving image to {image_path}...")
     with open(image_path, "wb") as f:
         f.write(image_bytes.read())
-    print(f"Image saved to: {image_path}")
+    print("DEBUG: Image file written successfully.")
+
     with open(JSON_FILE, 'r+') as f:
         data = json.load(f)
         new_dream_entry = {
@@ -108,33 +93,35 @@ def save_image_and_update_json(poem, image_bytes, initial_prompt):
         f.seek(0)
         json.dump(data, f, indent=4)
         f.truncate()
+    print("DEBUG: JSON file updated successfully.")
 
-# --- Main Execution ---
 def main():
+    print("DEBUG: Main function started.")
     if not all([GEMINI_API_KEY, STABILITY_API_KEY]):
-        raise ValueError("Gemini or Stability API key is missing. Check your GitHub Secrets.")
+        raise ValueError("DEBUG FAIL: API keys are missing.")
     
-    print("The Skald is waking...")
+    print("DEBUG: STEP 1 - GENERATE PROMPT")
     initial_prompt = generate_creative_prompt()
-    print(f"--- Initial Idea ---\n{initial_prompt}\n--------------------")
     
+    print("DEBUG: STEP 2 - GENERATE TEXTS FROM GEMINI")
     poem, image_prompt = generate_poem_and_image_prompt(initial_prompt)
     
-    if not poem or not poem.strip():
-        raise ValueError("The poem generated by Gemini was empty. Halting run.")
     if not image_prompt or not image_prompt.strip():
-        raise ValueError("The image prompt generated by Gemini was empty. Halting run.")
+        raise ValueError("DEBUG FAIL: Image prompt from Gemini is empty.")
 
+    print("DEBUG: STEP 3 - GENERATE IMAGE FROM STABILITY AI")
     image_bytes = generate_image(image_prompt)
+    
     if image_bytes:
+        print("DEBUG: STEP 4 - SAVE FILES")
         save_image_and_update_json(poem, image_bytes, initial_prompt)
-        print("A new dream has been recorded. The Skald sleeps again.")
+        print("DEBUG: Main function finished successfully.")
     else:
-        raise Exception("No image was returned from the generation service after a successful prompt.")
+        raise Exception("DEBUG FAIL: No image was returned from Stability AI.")
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"An error occurred in the main process: {e}", file=sys.stderr)
+        print(f"FATAL ERROR in main process: {e}", file=sys.stderr)
         sys.exit(1)
