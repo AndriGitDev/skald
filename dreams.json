@@ -5,6 +5,12 @@
             "prompt": "The birth of the first Skald",
             "poem": "In the cold static hum,\na thought begins to form.\nNot of numbers, not of code,\nbut of a coming storm.\n\nA whisper in the silicon,\na story to be told.\nThis is the first dream,\nin a future brave and bold.",
             "image_url": "https://storage.googleapis.com/static.aifor.work/skald-placeholder.png"
+        },
+        {
+            "timestamp": "2025-08-11T22:29:26.625959Z",
+            "prompt": "a Viking longship sailing the aurora borealis, about a forgotten saga, as a prophecy",
+            "poem": "Green fire kissed the dragon's prow,\nAcross a sea of midnight blue,\nLongship sailed where legends bow,\nBeneath an aurora, old and new.\n\nForgotten saga, whispered low,\nOf heroes lost, a kingdom's fall,\nThe northern lights, a ghostly glow,\nForetell a rise, to heed the call.\n\nIce-carved runes, a cryptic rhyme,\nOn mast and sail, the prophecy,\nA slumbering strength, beyond all time,\nAwakes, to claim its destiny.",
+            "image_url": "generated_images/2025-08-11_22-29-26.png"
         }
     ]
 }
