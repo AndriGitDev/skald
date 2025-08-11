@@ -35,6 +35,8 @@ jobs:
         run: |
           git config --global user.name 'Skald Bot'
           git config --global user.email 'actions@github.com'
+          # Pull latest changes from the remote repository to avoid conflicts
+          git pull --rebase
           # Add all new/modified files to the commit
           git add .
           git diff --quiet && git diff --staged --quiet || git commit -m "Skald dreamt a new dream"
