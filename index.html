@@ -12,6 +12,8 @@
         <img src="logo.png" alt="Logo">
     </a>
 
+    <div id="dream-counter">0</div>
+
     <div id="skald-container">
         <div id="poem-container">
             <pre id="poem-text"></pre>
@@ -25,8 +27,13 @@
         fetch('dreams.json')
             .then(response => response.json())
             .then(data => {
+                // --- New JavaScript for the counter ---
+                const dreamCount = data.dreams.length;
+                document.getElementById('dream-counter').innerText = dreamCount;
+                // --- End of new JavaScript ---
+                
                 // Get the most recent dream (the last one in the array)
-                const latestDream = data.dreams[data.dreams.length - 1];
+                const latestDream = data.dreams[dreamCount - 1];
                 
                 if (latestDream) {
                     // Set the background image
