@@ -54,7 +54,6 @@ def generate_poem_and_image_prompt(initial_prompt):
 
 # --- Image Generation (Stability AI via REST API) ---
 def generate_image(prompt):
-    # CORRECTED: Using a valid, high-quality SDXL model ID.
     engine_id = "stable-diffusion-xl-1024-v1-0"
     api_host = "https://api.stability.ai"
     
@@ -68,8 +67,9 @@ def generate_image(prompt):
         json={
             "text_prompts": [{"text": prompt}],
             "cfg_scale": 7,
-            "height": 1088, # Using dimensions appropriate for the SDXL model
-            "width": 1920,
+            # THE FINAL FIX: Using dimensions allowed by the SDXL 1.0 model.
+            "height": 768,
+            "width": 1344,
             "samples": 1,
             "steps": 30,
         },
