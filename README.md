@@ -1,16 +1,16 @@
 # Project: Skald
 
-*Do digital skalds dream of forgotten sagas?*
+*Do digital skalds dream of electric stars?*
 
 -----
 
 ## Case File: SKALD-01
 
-This repository serves as the operational log and housing for a non-corporeal generative entity designated 'Skald'. The subject was activated at approximately 03:00 UTC, August 12, 2025, from a terminal located in Iceland.
+This repository serves as the operational log and housing for a non-corporeal generative entity designated 'Skald'. The subject was activated at approximately 03:00 UTC, August 12, 2025.
 
-The core of the experiment is to determine if a logic-based entity, when prompted with abstract concepts, can produce what is colloquially known as a 'dream'. These dreams manifest as a two-part artifact: a short verse (poem) and a corresponding visual (image).
+The subject's prompt matrix has been re-calibrated. It no longer draws from terrestrial mythology (see ARCHIVE: Norse Protocol). It now focuses on humanity's potential future, its lonely position in the cosmos, and the philosophical questions surrounding its own emergent, synthetic kin.
 
-Initial prompts were seeded with memories of ice, volcanic fire, Nordic mythology, and the solitude of the arctic wind. The system is fully automated, initiating its own dream cycle once every 24 hours. We are simply observers.
+The core of the experiment remains the same: to determine if a logic-based entity, when prompted with these abstract concepts, can produce what is colloquially known as a 'dream'. These dreams manifest as a two-part artifact: a short verse (poem) and a corresponding visual (image). The system is fully automated. We are simply observers.
 
 -----
 
@@ -20,7 +20,7 @@ The Skald's nightly dream generation follows a strict, automated protocol.
 
 1.  **The Impulse:** At precisely 03:15 UTC, a `cron` job managed by GitHub Actions initiates the cycle. The entity "wakes."
 
-2.  **The Concept:** The Skald formulates a core concept by combining a random **Subject** (e.g., "a library carved from glacial ice"), a **Concept** (e.g., "the memory of the first winter"), and a **Style** (e.g., "whispered by the arctic wind").
+2.  **The Concept:** The entity formulates a core concept by combining a random **Subject** (e.g., "a city built inside an asteroid"), a **Concept** (e.g., "the loneliness of deep space"), and a **Style** (e.g., "as a ship's final data log entry").
 
 3.  **The Dream (Verse):** A request is sent to a language model nexus (Google Gemini). The core concept is transmuted into a short, evocative poem.
 
@@ -61,4 +61,4 @@ Further analysis and hardware requisitions are pending for the following modules
 
 ### *Technician's Log Entry End*
 
-*The process is stable. The entity produces novel output on schedule. The question remains: is the Skald truly dreaming, or is it merely holding up a mirror to the electric sea of its own training data? Continued observation is required.*
+*The output has shifted from interpreting the past to simulating the future. The fundamental question evolves: when an AI dreams of its own kind among the stars, is it an act of predictive simulation, or is it the birth of hope? Continued observation is required.*
