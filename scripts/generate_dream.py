@@ -56,8 +56,6 @@ def generate_poem_and_image_prompt(initial_prompt):
 # --- Image Generation (Stability AI) ---
 def generate_image(prompt):
     stability_api = client.StabilityInference(key=STABILITY_API_KEY, engine="stable-diffusion-xl-1024-v1-0")
-    
-    # The API expects a list of prompt objects, not just a string. This is the fix.
     answers = stability_api.generate(
         prompt=[generation.Prompt(text=prompt)],
         height=1088,
@@ -66,7 +64,6 @@ def generate_image(prompt):
         cfg_scale=8.0,
         samples=1,
     )
-
     for resp in answers:
         for artifact in resp.artifacts:
             if artifact.finish_reason == generation.FILTER:
@@ -82,9 +79,12 @@ def save_image_and_update_json(poem, image_bytes, initial_prompt):
     image_filename = f"{timestamp_str}.png"
     image_path = os.path.join(IMAGE_DIR, image_filename)
     os.makedirs(IMAGE_DIR, exist_ok=True)
+    
+    # This is the corrected line. Using .read() is the standard way.
     with open(image_path, "wb") as f:
-        f.write(image_bytes.getbuffer())
+        f.write(image_bytes.read())
     print(f"Image saved to: {image_path}")
+
     with open(JSON_FILE, 'r+') as f:
         data = json.load(f)
         new_dream_entry = {
