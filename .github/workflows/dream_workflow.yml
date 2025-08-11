@@ -27,6 +27,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install google-generativeai requests stability-sdk
 
+      - name: Debug API Keys
+        run: |
+          echo "Is GEMINI_API_KEY set? : ${{ env.GEMINI_API_KEY != '' }}"
+          echo "Is STABILITY_API_KEY set? : ${{ env.STABILITY_API_KEY != '' }}"
+
       - name: Run the dream script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
