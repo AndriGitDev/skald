@@ -15,6 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          # Fetch all history for a clean pull
           fetch-depth: 0
 
       - name: Set up Python
@@ -25,12 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install google-generativeai requests stability-sdk
-
-      - name: Debug API Keys
-        run: |
-          echo "Is GEMINI_API_KEY set? : ${{ env.GEMINI_API_KEY != '' }}"
-          echo "Is STABILITY_API_KEY set? : ${{ env.STABILITY_API_KEY != '' }}"
+          pip install google-generativeai requests
 
       - name: Run the dream script
         env:
@@ -43,15 +39,18 @@ jobs:
           git config --global user.name 'Skald Bot'
           git config --global user.email 'actions@github.com'
           
-          git fetch origin
-          git reset --hard origin/main
+          # This is the corrected process to sync and save changes
+          # 1. Pull the latest changes from the repository
+          git pull --rebase
           
+          # 2. Add all new files created by the script
           git add .
           
+          # 3. Commit the new dream, if there are any changes
           if ! git diff --staged --quiet; then
             git commit -m "Skald dreamt a new dream"
-            # Force push to overwrite the remote branch and break the lock.
-            git push --force origin main
+            # 4. Push the new commit. Force push is no longer needed.
+            git push
           else
             echo "No new dream was generated, nothing to commit."
           fi
