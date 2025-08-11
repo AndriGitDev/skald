@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import sys
 from io import BytesIO
 from datetime import datetime
 import google.generativeai as genai
@@ -17,17 +18,15 @@ IMAGE_DIR = 'generated_images'
 SUBJECTS = [
     "a geothermal lagoon under a sky of stars", "a library carved from glacial ice",
     "a Viking longship sailing the aurora borealis", "a lighthouse at the edge of the world",
-    "a rune-carved stone humming with power", "the heart of a sleeping volcano",
-    "a forgotten fishing village", "a path of glowing moss in a lava field"
+    "a rune-carved stone humming with power", "the heart of a sleeping volcano"
 ]
 CONCEPTS = [
     "a forgotten saga", "the memory of the first winter", "the silence between worlds",
-    "the solitude of the midnight sun", "an echo from a dying star",
-    "the weight of an ancient promise", "the birth of a new god"
+    "the solitude of the midnight sun", "an echo from a dying star"
 ]
 STYLES = [
     "as a lost myth", "whispered by the arctic wind", "etched in volcanic rock",
-    "as a prophecy", "as a sailor's final log entry", "as a lullaby for a giant"
+    "as a prophecy", "as a sailor's final log entry"
 ]
 
 def generate_creative_prompt():
@@ -40,30 +39,24 @@ def generate_creative_prompt():
 def generate_poem_and_image_prompt(initial_prompt):
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-1.5-flash')
-    poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
-    poem = model.generate_content(poem_prompt).text
-    print(f"--- Generated Poem ---\n{poem.strip()}\n----------------------")
     
-    image_prompt_template = (
-        "Read this poem and transform it into a rich, detailed, and descriptive prompt for an AI image generator. "
-        "Describe the scene, mood, colors, and composition. Add style cues like 'epic fantasy art, cinematic lighting, highly detailed, photorealistic'.\n\n"
-        f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nDETAILED PROMPT:"
-    )
-    image_prompt = model.generate_content(image_prompt_template).text
+    # Generate Poem and explicitly cast to string
+    poem_response = model.generate_content(f"You are the Skald... Write a short poem based on this idea: '{initial_prompt}'.")
+    poem = str(getattr(poem_response, 'text', ''))
+    print(f"--- Generated Poem ---\n{poem.strip()}\n----------------------")
+
+    # Generate Image Prompt and explicitly cast to string
+    image_prompt_template = f"Read this poem and transform it into a rich, detailed prompt for an AI image generator...\n\nPOEM:\n\"\"\"\n{poem}\n\"\"\"\n\nDETAILED PROMPT:"
+    image_prompt_response = model.generate_content(image_prompt_template)
+    image_prompt = str(getattr(image_prompt_response, 'text', ''))
     print(f"--- Generated Image Prompt ---\n{image_prompt.strip()}\n----------------------------")
+    
     return poem, image_prompt
 
 # --- Image Generation (Stability AI) ---
 def generate_image(prompt):
     stability_api = client.StabilityInference(key=STABILITY_API_KEY, engine="stable-diffusion-xl-1024-v1-0")
-    answers = stability_api.generate(
-        prompt=[generation.Prompt(text=prompt)],
-        height=1088,
-        width=1920,
-        steps=50,
-        cfg_scale=8.0,
-        samples=1,
-    )
+    answers = stability_api.generate(prompt=[generation.Prompt(text=prompt)], height=1088, width=1920, steps=30, cfg_scale=7.0, samples=1)
     for resp in answers:
         for artifact in resp.artifacts:
             if artifact.finish_reason == generation.FILTER:
@@ -75,28 +68,34 @@ def generate_image(prompt):
 
 # --- File Operations ---
 def save_image_and_update_json(poem, image_bytes, initial_prompt):
-    timestamp_str = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
-    image_filename = f"{timestamp_str}.png"
-    image_path = os.path.join(IMAGE_DIR, image_filename)
-    os.makedirs(IMAGE_DIR, exist_ok=True)
-    
-    # This is the corrected line. Using .read() is the standard way.
-    with open(image_path, "wb") as f:
-        f.write(image_bytes.read())
-    print(f"Image saved to: {image_path}")
+    try:
+        timestamp_str = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
+        image_filename = f"{timestamp_str}.png"
+        image_path = os.path.join(IMAGE_DIR, image_filename)
+        os.makedirs(IMAGE_DIR, exist_ok=True)
+        
+        with open(image_path, "wb") as f:
+            f.write(image_bytes.read())
+        print(f"Image saved to: {image_path}")
 
-    with open(JSON_FILE, 'r+') as f:
-        data = json.load(f)
-        new_dream_entry = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "prompt": initial_prompt,
-            "poem": poem.strip(),
-            "image_url": image_path
-        }
-        data['dreams'].append(new_dream_entry)
-        f.seek(0)
-        json.dump(data, f, indent=4)
-        f.truncate()
+        with open(JSON_FILE, 'r+') as f:
+            data = json.load(f)
+            new_dream_entry = {
+                "timestamp": str(datetime.utcnow().isoformat() + "Z"),
+                "prompt": str(initial_prompt),
+                "poem": str(poem).strip(),
+                "image_url": str(image_path)
+            }
+            data['dreams'].append(new_dream_entry)
+            f.seek(0)
+            json.dump(data, f, indent=4)
+            f.truncate()
+    except TypeError as e:
+        print(f"A TypeError occurred during file operations, likely with json.dump: {e}", file=sys.stderr)
+        raise
+    except Exception as e:
+        print(f"An unexpected error occurred during file operations: {e}", file=sys.stderr)
+        raise
 
 # --- Main Execution ---
 def main():
@@ -109,8 +108,10 @@ def main():
     
     poem, image_prompt = generate_poem_and_image_prompt(initial_prompt)
     
+    if not poem or not poem.strip():
+        raise ValueError("The poem generated by Gemini was empty. Halting run.")
     if not image_prompt or not image_prompt.strip():
-        raise ValueError("The image prompt generated by Gemini was empty. Cannot proceed.")
+        raise ValueError("The image prompt generated by Gemini was empty. Halting run.")
 
     image_bytes = generate_image(image_prompt)
     if image_bytes:
@@ -121,4 +122,4 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"An error occurred in the main process: {e}")
+        print(f"An error occurred in the main process: {e}", file=sys.stderr)
