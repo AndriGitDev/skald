@@ -45,10 +45,12 @@ def generate_poem_and_image_prompt(initial_prompt):
     poem = str(getattr(model.generate_content(poem_prompt), 'text', ''))
     print(f"--- Generated Poem ---\n{poem.strip()}\n----------------------")
     
+    # This is the updated image prompt template. It asks for a concise, effective prompt.
     image_prompt_template = (
-        "Read this poem and transform it into a rich, detailed, and descriptive prompt for an AI image generator. "
-        "Describe the scene, mood, colors, and composition. Add style cues like 'epic fantasy art, cinematic lighting, highly detailed, photorealistic'.\n\n"
-        f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nDETAILED PROMPT:"
+        "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator like Stable Diffusion. "
+        "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles. "
+        "Example: Epic fantasy art, a lighthouse at the edge of the world, cinematic lighting, dramatic atmosphere, by Caspar David Friedrich, highly detailed.\n\n"
+        f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nCONCISE PROMPT:"
     )
     image_prompt = str(getattr(model.generate_content(image_prompt_template), 'text', ''))
     print(f"--- Generated Image Prompt ---\n{image_prompt.strip()}\n----------------------------")
@@ -57,16 +59,21 @@ def generate_poem_and_image_prompt(initial_prompt):
 # --- Image Generation (Stability AI) ---
 def generate_image(prompt):
     stability_api = client.StabilityInference(key=STABILITY_API_KEY, engine="stable-diffusion-xl-1024-v1-0")
-    answers = stability_api.generate(prompt=[generation.Prompt(text=prompt)], height=1088, width=1920, steps=30, cfg_scale=7.0, samples=1)
+    answers = stability_api.generate(
+        prompt=[generation.Prompt(text=prompt)],
+        height=1088,
+        width=1920,
+        steps=30,
+        cfg_scale=7.0,
+        samples=1,
+    )
     for resp in answers:
         for artifact in resp.artifacts:
-            # This is the important change. We now treat a filter event as a critical error.
             if artifact.finish_reason == generation.FILTER:
-                raise Exception("Image generation failed due to Stability AI's safety filter. The prompt was likely flagged as unsafe.")
+                raise Exception("Image generation failed due to Stability AI's safety filter.")
             if artifact.type == generation.ARTIFACT_IMAGE:
                 print("Image generated successfully from Stability AI.")
                 return BytesIO(artifact.binary)
-    # If the loop finishes without returning an image, return None.
     return None
 
 # --- File Operations ---
@@ -112,13 +119,11 @@ def main():
         save_image_and_update_json(poem, image_bytes, initial_prompt)
         print("A new dream has been recorded. The Skald sleeps again.")
     else:
-        # This makes the "silent failure" visible in the logs.
-        print("No image was returned from the generation service. No new dream will be recorded.")
+        raise Exception("No image was returned from the generation service after a successful prompt.")
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
         print(f"An error occurred in the main process: {e}", file=sys.stderr)
-        # We explicitly exit with a non-zero status code to make the workflow step fail.
         sys.exit(1)
