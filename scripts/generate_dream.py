@@ -2,11 +2,11 @@ import os
 import json
 import random
 import sys
+import base64
+import requests
 from io import BytesIO
 from datetime import datetime
 import google.generativeai as genai
-from stability_sdk import client
-import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 
 # --- Configuration & API Keys ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -45,7 +45,6 @@ def generate_poem_and_image_prompt(initial_prompt):
     poem = str(getattr(model.generate_content(poem_prompt), 'text', ''))
     print(f"--- Generated Poem ---\n{poem.strip()}\n----------------------")
     
-    # Updated template to create a cleaner prompt without specific artist names.
     image_prompt_template = (
         "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator. "
         "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles like 'epic fantasy art' or 'photorealistic'.\n\n"
@@ -55,28 +54,37 @@ def generate_poem_and_image_prompt(initial_prompt):
     print(f"--- Generated Image Prompt ---\n{image_prompt.strip()}\n----------------------------")
     return poem, image_prompt
 
-# --- Image Generation (Stability AI) ---
+# --- Image Generation (Stability AI via REST API) ---
 def generate_image(prompt):
-    # CHANGED: Using a more standard, stable engine and compatible dimensions.
-    stability_api = client.StabilityInference(
-        key=STABILITY_API_KEY, 
-        engine="stable-diffusion-v1-6"
+    engine_id = "stable-diffusion-v1-6"
+    api_host = "https://api.stability.ai"
+    
+    response = requests.post(
+        f"{api_host}/v1/generation/{engine_id}/text-to-image",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {STABILITY_API_KEY}"
+        },
+        json={
+            "text_prompts": [{"text": prompt}],
+            "cfg_scale": 7,
+            "height": 576,
+            "width": 1024,
+            "samples": 1,
+            "steps": 30,
+        },
     )
-    answers = stability_api.generate(
-        prompt=[generation.Prompt(text=prompt)],
-        height=576, # 16:9 aspect ratio, divisible by 64
-        width=1024, # 
-        steps=30,
-        cfg_scale=7.0,
-        samples=1,
-    )
-    for resp in answers:
-        for artifact in resp.artifacts:
-            if artifact.finish_reason == generation.FILTER:
-                raise Exception("Image generation failed due to Stability AI's safety filter.")
-            if artifact.type == generation.ARTIFACT_IMAGE:
-                print("Image generated successfully from Stability AI.")
-                return BytesIO(artifact.binary)
+
+    if response.status_code != 200:
+        raise Exception(f"Non-200 response from Stability API: {response.text}")
+
+    data = response.json()
+    for image in data.get("artifacts", []):
+        image_bytes = base64.b64decode(image["base64"])
+        print("Image generated successfully via REST API.")
+        return BytesIO(image_bytes)
+        
     return None
 
 # --- File Operations ---
