@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skald</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="skald-container">
+        <div id="poem-container">
+            <pre id="poem-text"></pre>
+        </div>
+        <a href="https://github.com/YOUR_USERNAME/skald" target="_blank" class="github-link">
+            [view source]
+        </a>
+    </div>
+    <script>
+        // Fetch and display the latest dream
+        fetch('dreams.json')
+            .then(response => response.json())
+            .then(data => {
+                // Get the most recent dream (the last one in the array)
+                const latestDream = data.dreams[data.dreams.length - 1];
+                
+                if (latestDream) {
+                    // Set the background image
+                    document.body.style.backgroundImage = `url('${latestDream.image_url}')`;
+                    
+                    // Set the poem text
+                    document.getElementById('poem-text').innerText = latestDream.poem;
+                }
+            })
+            .catch(error => {
+                console.error("Could not load the dream:", error);
+                document.getElementById('poem-text').innerText = "The Skald is sleeping. No new dream has been recorded.";
+            });
+    </script>
+</body>
+</html>
