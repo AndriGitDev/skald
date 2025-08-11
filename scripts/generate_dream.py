@@ -1,5 +1,6 @@
 import os
 import json
+import random
 from io import BytesIO
 from datetime import datetime
 import google.generativeai as genai
@@ -10,7 +11,31 @@ import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 STABILITY_API_KEY = os.getenv("STABILITY_API_KEY")
 JSON_FILE = 'dreams.json'
-IMAGE_DIR = 'generated_images' # Folder to store images
+IMAGE_DIR = 'generated_images'
+
+# --- Dynamic Prompt Generation ---
+SUBJECTS = [
+    "a geothermal lagoon under a sky of stars", "a library carved from glacial ice",
+    "a Viking longship sailing the aurora borealis", "a lighthouse at the edge of the world",
+    "a rune-carved stone humming with power", "the heart of a sleeping volcano",
+    "a forgotten fishing village", "a path of glowing moss in a lava field"
+]
+CONCEPTS = [
+    "a forgotten saga", "the memory of the first winter", "the silence between worlds",
+    "the solitude of the midnight sun", "an echo from a dying star",
+    "the weight of an ancient promise", "the birth of a new god"
+]
+STYLES = [
+    "as a lost myth", "whispered by the arctic wind", "etched in volcanic rock",
+    "as a prophecy", "as a sailor's final log entry", "as a lullaby for a giant"
+]
+
+def generate_creative_prompt():
+    """Creates a random, evocative prompt for the AI by combining themes."""
+    subject = random.choice(SUBJECTS)
+    concept = random.choice(CONCEPTS)
+    style = random.choice(STYLES)
+    return f"{subject}, about {concept}, {style}"
 
 # --- AI Interaction (Gemini) ---
 def generate_poem_and_image_prompt(initial_prompt):
@@ -46,27 +71,20 @@ def generate_image(prompt):
 
 # --- File Operations ---
 def save_image_and_update_json(poem, image_bytes, initial_prompt):
-    # Create a unique filename based on the current timestamp
     timestamp_str = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
     image_filename = f"{timestamp_str}.png"
     image_path = os.path.join(IMAGE_DIR, image_filename)
-
-    # Create the directory if it doesn't exist
     os.makedirs(IMAGE_DIR, exist_ok=True)
-    
-    # Save the image file
     with open(image_path, "wb") as f:
         f.write(image_bytes.getbuffer())
     print(f"Image saved to: {image_path}")
-
-    # Update the JSON file
     with open(JSON_FILE, 'r+') as f:
         data = json.load(f)
         new_dream_entry = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "prompt": initial_prompt,
             "poem": poem.strip(),
-            "image_url": image_path  # Store the local path to the image
+            "image_url": image_path
         }
         data['dreams'].append(new_dream_entry)
         f.seek(0)
@@ -77,16 +95,9 @@ def save_image_and_update_json(poem, image_bytes, initial_prompt):
 def main():
     if not all([GEMINI_API_KEY, STABILITY_API_KEY]):
         raise ValueError("Gemini or Stability API key is missing. Check your GitHub Secrets.")
-        
     print("The Skald is waking...")
-    # You can get creative with your initial prompts here
-    initial_prompt = random.choice([
-        "A frozen library in the Arctic", "The last geothermal vent on a dying world",
-        "A saga told by the aurora borealis", "A Viking longship sailing on a sea of clouds"
-    ])
-    
+    initial_prompt = generate_creative_prompt()
     poem, image_prompt = generate_poem_and_image_prompt(initial_prompt)
-    
     image_bytes = generate_image(image_prompt)
     if image_bytes:
         save_image_and_update_json(poem, image_bytes, initial_prompt)
