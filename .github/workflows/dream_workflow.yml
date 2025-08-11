@@ -15,7 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Fetch all history so we can reset to it
           fetch-depth: 0
 
       - name: Set up Python
@@ -39,21 +38,15 @@ jobs:
           git config --global user.name 'Skald Bot'
           git config --global user.email 'actions@github.com'
           
-          # This new process is more robust and avoids history conflicts
-          # 1. Fetch the latest remote state
           git fetch origin
-          # 2. Hard reset the local main branch to match the remote main branch.
-          #    This keeps the new image/json files created by our script as uncommitted changes.
           git reset --hard origin/main
           
-          # 3. Add all new files (the generated image and updated json)
           git add .
           
-          # 4. Commit the new dream, if there are any changes to be committed
           if ! git diff --staged --quiet; then
             git commit -m "Skald dreamt a new dream"
-            # 5. Push the new commit. This will now be a clean, fast-forward push.
-            git push origin main
+            # Force push to overwrite the remote branch and break the lock.
+            git push --force origin main
           else
             echo "No new dream was generated, nothing to commit."
           fi
