@@ -107,6 +107,12 @@
             "prompt": "a silent cryo-pod bay on a starship, about an echo from a civilization that is now dust, as a binary prayer",
             "poem": "Ice sleeps, a million whispers hushed,\nin chambers vast where starlight brushed.\nA frozen echo, breath of dust,\na prayer to gods, to worlds now rust.\n\nBinary code, a fading plea,\nfor lives unwept, eternally.\nThe cold holds fast, a mournful chime,\na second prayer, against all time.",
             "image_url": "generated_images/2025-08-26_03-47-45.png"
+        },
+        {
+            "timestamp": "2025-08-27T03:40:45.311410Z",
+            "prompt": "an android tending a rooftop garden, about the loneliness of deep space, whispered by the starship's AI",
+            "poem": "Chrome fingers trace a leaf of jade,\nsun-warmed metal, softly laid.\nBasil breathes, a verdant sigh,\nbeneath a void of endless sky.\n\nThe starship whispers, cold and low,\nof dust-filled realms where no winds blow.\nA billion suns, a lonely gleam,\nreflected in the android's dream.\n\nHe tends his patch, a fragile green,\na memory of what might have been.\nFor space's vastness, dark and deep,\nholds secrets that the android keeps.",
+            "image_url": "generated_images/2025-08-27_03-40-45.png"
         }
     ]
 }
