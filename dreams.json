@@ -113,6 +113,12 @@
             "prompt": "an android tending a rooftop garden, about the loneliness of deep space, whispered by the starship's AI",
             "poem": "Chrome fingers trace a leaf of jade,\nsun-warmed metal, softly laid.\nBasil breathes, a verdant sigh,\nbeneath a void of endless sky.\n\nThe starship whispers, cold and low,\nof dust-filled realms where no winds blow.\nA billion suns, a lonely gleam,\nreflected in the android's dream.\n\nHe tends his patch, a fragile green,\na memory of what might have been.\nFor space's vastness, dark and deep,\nholds secrets that the android keeps.",
             "image_url": "generated_images/2025-08-27_03-40-45.png"
+        },
+        {
+            "timestamp": "2025-08-28T03:45:22.343533Z",
+            "prompt": "a city built inside an asteroid, about a memory that was never lived, as a ship's final data log entry",
+            "poem": "Star-dust choked the viewport's gleam,\na city carved in frozen dream.\nNo sun to kiss these polished halls,\nonly echoes in spectral thralls.\n\nHer memory, a phantom bright,\na life unspooled in shadowed light.\nNever walked these echoing streets,\nnever felt the phantom's fleeting heats.\n\nEngines hum a dying song,\na data stream, where I belong.\nThis asteroid, my final pyre,\nholds a ghost of her desire. \nData fades.  The void expands.  Goodnight.",
+            "image_url": "generated_images/2025-08-28_03-45-22.png"
         }
     ]
 }
