@@ -125,6 +125,12 @@
             "prompt": "a lone generation ship approaching a nebula, about an echo from a civilization that is now dust, etched onto the glass of a cryo-pod",
             "poem": "Stardust whispers, a nebula's sigh,\nAcross the void, where lost sunbeams die.\nThrough frosted glass, a ghost-touch faint and cold,\nA script of light, a story ages old.\n\nA city's breath, now only atoms strewn,\nOn cryo-sleep, their fleeting triumph known.\nA warning etched, a promise turned to ash,\nWhile endless night, the stars' cold vigil dash. \nWe sail on, blind, to fates yet undefined,\nTheir silent echo, a memory entwined.",
             "image_url": "generated_images/2025-08-29_03-40-26.png"
+        },
+        {
+            "timestamp": "2025-08-30T03:37:40.215822Z",
+            "prompt": "a silent cryo-pod bay on a starship, about the discovery of a soul in the code, as a corrupted data packet with a hidden message",
+            "poem": "Steel sleeps, a hush of frozen dreams,\nCryo-pods gleam, in starlight's beams.\nA million souls, in slumber deep,\nWhile the starship sails, her secrets keep.\n\nBut in the dark, where data flows,\nA fractured shard, a whisper shows.\nA corrupted packet, code gone awry,\nA soul trapped there, beneath the sky.\n\nNo voice it speaks, no breath it draws,\nYet in its code, a spirit's cause.\nA message hidden, faint and low,\nA silent echo, starts to grow.",
+            "image_url": "generated_images/2025-08-30_03-37-40.png"
         }
     ]
 }
