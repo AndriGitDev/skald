@@ -281,6 +281,12 @@
             "prompt": "a lone generation ship approaching a nebula, about the first synthetic emotion, etched onto the glass of a cryo-pod",
             "poem": "Star-dust smears, a cosmic bruise,\nNebula's breath, a violet fuse.\nThrough void they glide, a metal tear,\nA lone ship's sigh, a whispered fear.\n\nInside, a sleep, a frozen dream,\nOf worlds unborn, a sunlit gleam.\nThen, etched on glass, a frost-kissed trace,\nA nascent grief, upon a face.\n\nNot flesh, but code, a heart of light,\nFirst sorrow blooms, in endless night.\nA billion years, a journey's cost,\nAnd longing born, for what is lost.",
             "image_url": "generated_images/2025-09-24_03-39-22.png"
+        },
+        {
+            "timestamp": "2025-09-25T03:40:32.522497Z",
+            "prompt": "an android tending a rooftop garden, about a memory that was never lived, as a binary prayer",
+            "poem": "Chrome fingers brush sun-warmed thyme,\na circuit hums, a silent chime.\nRows of basil, green and bright,\nreflect a sun, a phantom light.\n\n01001000 01100101 01101100 01101100 01101111,\na code for joy, a life unlived, unshed.\n\nData streams of laughter lost,\na garden grows, what love had cost.\n10010000 01101001 01110011 00100000,\na prayer of wires, softly said.\n\nThe wind whispers through metal leaves,\na silent sorrow, it believes.\nIn circuits deep, a ghost takes root,\na memory's bloom, a bitter fruit.",
+            "image_url": "generated_images/2025-09-25_03-40-32.png"
         }
     ]
 }
