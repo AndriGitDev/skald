@@ -38,62 +38,80 @@ def generate_creative_prompt():
     style = random.choice(STYLES)
     return f"{subject}, about {concept}, {style}"
 
+# --- List Available Models ---
+def list_available_models():
+    url = f"https://generativelanguage.googleapis.com/v1/models?key={GEMINI_API_KEY}"
+    
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        raise Exception(f"Failed to list models: {response.status_code} - {response.text}")
+    
+    models = response.json().get('models', [])
+    print("Available models:")
+    for model in models:
+        print(f"  - {model.get('name')}")
+        if 'supportedGenerationMethods' in model:
+            print(f"    Methods: {model['supportedGenerationMethods']}")
+    
+    # Find a model that supports generateContent
+    for model in models:
+        if 'generateContent' in model.get('supportedGenerationMethods', []):
+            model_name = model['name'].replace('models/', '')
+            print(f"\nUsing model: {model_name}")
+            return model_name
+    
+    raise Exception("No models support generateContent")
+
 # --- AI Interaction (Gemini via REST API) ---
-def generate_poem_and_image_prompt(initial_prompt):
-    # Try gemini-pro first, then fall back to gemini-1.0-pro
-    model_names = ["gemini-pro", "gemini-1.0-pro", "gemini-1.5-pro"]
+def generate_poem_and_image_prompt(initial_prompt, model_name):
+    url = f"https://generativelanguage.googleapis.com/v1/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
     
-    for model_name in model_names:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
-            
-            headers = {
-                "Content-Type": "application/json"
-            }
-            
-            # Generate poem
-            poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
-            
-            payload = {
-                "contents": [{
-                    "parts": [{
-                        "text": poem_prompt
-                    }]
-                }]
-            }
-            
-            response = requests.post(url, headers=headers, json=payload)
-            
-            if response.status_code == 200:
-                poem = response.json()['candidates'][0]['content']['parts'][0]['text']
-                
-                # Generate image prompt
-                image_prompt_template = (
-                    "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator. "
-                    "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles like 'epic fantasy art' or 'photorealistic'.\n\n"
-                    f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nCONCISE PROMPT:"
-                )
-                
-                payload = {
-                    "contents": [{
-                        "parts": [{
-                            "text": image_prompt_template
-                        }]
-                    }]
-                }
-                
-                response = requests.post(url, headers=headers, json=payload)
-                
-                if response.status_code == 200:
-                    image_prompt = response.json()['candidates'][0]['content']['parts'][0]['text']
-                    print(f"Successfully used model: {model_name}")
-                    return poem, image_prompt
-        except Exception as e:
-            print(f"Model {model_name} failed: {e}")
-            continue
+    headers = {
+        "Content-Type": "application/json"
+    }
     
-    # If all models fail, raise an error
-    raise Exception(f"All Gemini models failed. Last response: {response.status_code} - {response.text}")
+    # Generate poem
+    poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
+    
+    payload = {
+        "contents": [{
+            "parts": [{
+                "text": poem_prompt
+            }]
+        }]
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    
+    if response.status_code != 200:
+        raise Exception(f"Gemini API error (poem): {response.status_code} - {response.text}")
+    
+    poem = response.json()['candidates'][0]['content']['parts'][0]['text']
+    
+    # Generate image prompt
+    image_prompt_template = (
+        "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator. "
+        "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles like 'epic fantasy art' or 'photorealistic'.\n\n"
+        f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nCONCISE PROMPT:"
+    )
+    
+    payload = {
+        "contents": [{
+            "parts": [{
+                "text": image_prompt_template
+            }]
+        }]
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    
+    if response.status_code != 200:
+        raise Exception(f"Gemini API error (image prompt): {response.status_code} - {response.text}")
+    
+    image_prompt = response.json()['candidates'][0]['content']['parts'][0]['text']
+    
+    return poem, image_prompt
 
 # --- Image Generation (Stability AI via REST API) ---
 def generate_image(prompt):
@@ -154,10 +172,14 @@ def main():
         raise ValueError("Gemini or Stability API key is missing. Check your GitHub Secrets.")
     
     print("The Skald is waking...")
+    
+    # First, discover available models
+    model_name = list_available_models()
+    
     initial_prompt = generate_creative_prompt()
     print(f"--- Initial Idea ---\n{initial_prompt}")
     
-    poem, image_prompt = generate_poem_and_image_prompt(initial_prompt)
+    poem, image_prompt = generate_poem_and_image_prompt(initial_prompt, model_name)
     print(f"--- Generated Poem ---\n{poem.strip()}")
     print(f"--- Generated Image Prompt ---\n{image_prompt.strip()}")
     
