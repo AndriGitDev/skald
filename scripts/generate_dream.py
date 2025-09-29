@@ -42,7 +42,15 @@ def generate_creative_prompt():
 # --- AI Interaction (Gemini) ---
 def generate_poem_and_image_prompt(initial_prompt):
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    
+    # Updated to use the latest API version
+    model = genai.GenerativeModel(
+        model_name='gemini-1.5-flash',
+        generation_config={
+            'temperature': 0.9,
+        }
+    )
+    
     poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
     poem = str(getattr(model.generate_content(poem_prompt), 'text', ''))
     
