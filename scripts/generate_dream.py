@@ -43,23 +43,26 @@ def generate_creative_prompt():
 def generate_poem_and_image_prompt(initial_prompt):
     genai.configure(api_key=GEMINI_API_KEY)
     
-    # Updated to use the latest API version
-    model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash',
-        generation_config={
-            'temperature': 0.9,
-        }
-    )
+    # Try gemini-pro as a fallback, or the exp model
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash-8b')
+    except:
+        try:
+            model = genai.GenerativeModel('gemini-pro')
+        except:
+            model = genai.GenerativeModel('gemini-1.0-pro')
     
     poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
-    poem = str(getattr(model.generate_content(poem_prompt), 'text', ''))
+    response = model.generate_content(poem_prompt)
+    poem = str(response.text)
     
     image_prompt_template = (
         "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator. "
         "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles like 'epic fantasy art' or 'photorealistic'.\n\n"
         f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nCONCISE PROMPT:"
     )
-    image_prompt = str(getattr(model.generate_content(image_prompt_template), 'text', ''))
+    response = model.generate_content(image_prompt_template)
+    image_prompt = str(response.text)
     return poem, image_prompt
 
 # --- Image Generation (Stability AI via REST API) ---
@@ -77,7 +80,6 @@ def generate_image(prompt):
         json={
             "text_prompts": [{"text": prompt}],
             "cfg_scale": 7,
-            # THE FINAL FIX: Using dimensions allowed by the SDXL 1.0 model.
             "height": 768,
             "width": 1344,
             "samples": 1,
