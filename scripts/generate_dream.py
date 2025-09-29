@@ -40,54 +40,60 @@ def generate_creative_prompt():
 
 # --- AI Interaction (Gemini via REST API) ---
 def generate_poem_and_image_prompt(initial_prompt):
-    # Use the REST API directly
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Try gemini-pro first, then fall back to gemini-1.0-pro
+    model_names = ["gemini-pro", "gemini-1.0-pro", "gemini-1.5-pro"]
     
-    headers = {
-        "Content-Type": "application/json"
-    }
+    for model_name in model_names:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+            
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            # Generate poem
+            poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
+            
+            payload = {
+                "contents": [{
+                    "parts": [{
+                        "text": poem_prompt
+                    }]
+                }]
+            }
+            
+            response = requests.post(url, headers=headers, json=payload)
+            
+            if response.status_code == 200:
+                poem = response.json()['candidates'][0]['content']['parts'][0]['text']
+                
+                # Generate image prompt
+                image_prompt_template = (
+                    "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator. "
+                    "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles like 'epic fantasy art' or 'photorealistic'.\n\n"
+                    f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nCONCISE PROMPT:"
+                )
+                
+                payload = {
+                    "contents": [{
+                        "parts": [{
+                            "text": image_prompt_template
+                        }]
+                    }]
+                }
+                
+                response = requests.post(url, headers=headers, json=payload)
+                
+                if response.status_code == 200:
+                    image_prompt = response.json()['candidates'][0]['content']['parts'][0]['text']
+                    print(f"Successfully used model: {model_name}")
+                    return poem, image_prompt
+        except Exception as e:
+            print(f"Model {model_name} failed: {e}")
+            continue
     
-    # Generate poem
-    poem_prompt = f"You are the Skald, an ancient AI poet. Write a short, evocative poem based on this idea: '{initial_prompt}'. Do not include a title."
-    
-    payload = {
-        "contents": [{
-            "parts": [{
-                "text": poem_prompt
-            }]
-        }]
-    }
-    
-    response = requests.post(url, headers=headers, json=payload)
-    
-    if response.status_code != 200:
-        raise Exception(f"Gemini API error (poem): {response.status_code} - {response.text}")
-    
-    poem = response.json()['candidates'][0]['content']['parts'][0]['text']
-    
-    # Generate image prompt
-    image_prompt_template = (
-        "Read the following poem. Based on its mood, subjects, and feeling, create a concise and powerful prompt for an AI image generator. "
-        "The prompt should be a single line of comma-separated keywords and descriptive phrases. Include artistic styles like 'epic fantasy art' or 'photorealistic'.\n\n"
-        f"POEM:\n\"\"\"\n{poem}\n\"\"\"\n\nCONCISE PROMPT:"
-    )
-    
-    payload = {
-        "contents": [{
-            "parts": [{
-                "text": image_prompt_template
-            }]
-        }]
-    }
-    
-    response = requests.post(url, headers=headers, json=payload)
-    
-    if response.status_code != 200:
-        raise Exception(f"Gemini API error (image prompt): {response.status_code} - {response.text}")
-    
-    image_prompt = response.json()['candidates'][0]['content']['parts'][0]['text']
-    
-    return poem, image_prompt
+    # If all models fail, raise an error
+    raise Exception(f"All Gemini models failed. Last response: {response.status_code} - {response.text}")
 
 # --- Image Generation (Stability AI via REST API) ---
 def generate_image(prompt):
