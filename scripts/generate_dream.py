@@ -38,33 +38,9 @@ def generate_creative_prompt():
     style = random.choice(STYLES)
     return f"{subject}, about {concept}, {style}"
 
-# --- List Available Models ---
-def list_available_models():
-    url = f"https://generativelanguage.googleapis.com/v1/models?key={GEMINI_API_KEY}"
-    
-    response = requests.get(url)
-    
-    if response.status_code != 200:
-        raise Exception(f"Failed to list models: {response.status_code} - {response.text}")
-    
-    models = response.json().get('models', [])
-    print("Available models:")
-    for model in models:
-        print(f"  - {model.get('name')}")
-        if 'supportedGenerationMethods' in model:
-            print(f"    Methods: {model['supportedGenerationMethods']}")
-    
-    # Find a model that supports generateContent
-    for model in models:
-        if 'generateContent' in model.get('supportedGenerationMethods', []):
-            model_name = model['name'].replace('models/', '')
-            print(f"\nUsing model: {model_name}")
-            return model_name
-    
-    raise Exception("No models support generateContent")
-
 # --- AI Interaction (Gemini via REST API) ---
-def generate_poem_and_image_prompt(initial_prompt, model_name):
+def generate_poem_and_image_prompt(initial_prompt):
+    model_name = "gemini-2.5-flash"
     url = f"https://generativelanguage.googleapis.com/v1/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
     
     headers = {
@@ -172,14 +148,10 @@ def main():
         raise ValueError("Gemini or Stability API key is missing. Check your GitHub Secrets.")
     
     print("The Skald is waking...")
-    
-    # First, discover available models
-    model_name = list_available_models()
-    
     initial_prompt = generate_creative_prompt()
     print(f"--- Initial Idea ---\n{initial_prompt}")
     
-    poem, image_prompt = generate_poem_and_image_prompt(initial_prompt, model_name)
+    poem, image_prompt = generate_poem_and_image_prompt(initial_prompt)
     print(f"--- Generated Poem ---\n{poem.strip()}")
     print(f"--- Generated Image Prompt ---\n{image_prompt.strip()}")
     
